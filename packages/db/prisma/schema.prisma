@@ -23,10 +23,11 @@ model User {
 }
 
 model Course {
-  id          String      @id     @default(uuid())
-  title       String
-  slug        String      @unique
-  purchases   Purchases[]
+  id                String      @id     @default(uuid())
+  title             String
+  slug              String      @unique
+  purchases         Purchases[]
+  calendarNotionId  String
 }
 
 model Purchases {
@@ -35,4 +36,5 @@ model Purchases {
   userId     String
   user       User         @relation(fields: [userId], references: [id])
   course     Course       @relation(fields: [courseId], references: [id])
+  @@unique([userId, courseId])
 }
