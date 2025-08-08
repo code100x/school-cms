@@ -19,7 +19,14 @@ model User {
   email        String      @unique
   phone        String      @unique
   password     String
+  publicKey    String?
   purchases    Purchases[]
+  role         Role        @default(USER)
+}
+
+enum Role {
+  ADMIN
+  USER
 }
 
 model Course {

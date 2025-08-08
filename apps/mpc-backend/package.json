@@ -1,5 +1,5 @@
 {
-  "name": "backend",
+  "name": "mpc-backend",
   "module": "index.ts",
   "type": "module",
   "devDependencies": {
@@ -9,13 +9,9 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
-    "axios": "^1.11.0",
-    "common": "*",
-    "cors": "^2.8.5",
-    "db": "*",
     "express": "^5.1.0",
-    "solana-mpc-tss-lib": "*"
+    "solana-mpc-tss-lib": "*",
+    "mpc-db": "*"
   }
 }

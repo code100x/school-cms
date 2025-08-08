@@ -1,18 +1,14 @@
 {
-  "name": "common",
+  "name": "mpc-db",
   "module": "index.ts",
   "type": "module",
   "exports": {
-    "./inputs": "./inputs.ts",
-    "./solana": "./solana.ts"
+    "./client": "./index.ts"
   },
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "zod": "^4.0.15"
   }
 }
