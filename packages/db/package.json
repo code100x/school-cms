@@ -2,10 +2,17 @@
   "name": "db",
   "module": "index.ts",
   "type": "module",
+  "exports": {
+    "./client": "./index.ts"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "prisma": "6.13.0"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@prisma/client": "6.13.0"
   }
 }
