@@ -86,7 +86,27 @@ app.get("/calendar/:courseId", authMiddleware, async (req, res) => {
         id: course.id,
         calendarId: course.calendarNotionId
     })
-    
+
+})
+
+app.get("/courses", authMiddleware, async(req, res) => {
+    const courses = await prismaClient.course.findMany({
+        where: {
+            purchases: {
+                some: {
+                    userId: req.userId
+                }
+            }
+        }
+    });
+
+    res.json({
+        courses: courses.map(c => ({
+            id: c.id,
+            title: c.title,
+            slug: c.slug
+        }))
+    })
 })
 
 app.listen(process.env.PORT || 3000);
