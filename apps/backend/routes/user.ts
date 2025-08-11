@@ -6,6 +6,7 @@ import { authMiddleware } from "../middleware";
 import { cli, MPC_SERVERS, MPC_THRESHOLD } from "./admin";
 import axios from "axios";
 import { NETWORK } from "common/solana";
+import bcrypt from "bcrypt"
 
 const router = Router();
 
@@ -37,7 +38,8 @@ router.post("/signin", async (req, res) => {
     }
 
     // TODO: Add password hashing
-    if (user.password !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+    if (!isPasswordValid) {
         res.status(403).json({
             message: "Incorrect creds"
         })

@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { CreateUserSchema, SendSchema, SignupSchema } from "common/inputs";
 import { adminAuthMiddleware } from "../middleware";
 import { NETWORK } from "common/solana";
+import bcrypt from "bcrypt";
 
 export const MPC_SERVERS = [
     "http://localhost:3001",
@@ -47,7 +48,8 @@ router.post("/signin", async (req, res) => {
     }
 
     // TODO: Add password hashing
-    if (user.password !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
         res.status(403).json({
             message: "Incorrect creds"
         })
