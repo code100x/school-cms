@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import { CreateUserSchema, SendSchema, SignupSchema } from "common/inputs";
 import { adminAuthMiddleware } from "../middleware";
 import { NETWORK } from "common/solana";
+import bcrypt from "bcryptjs";
 
 export const MPC_SERVERS = [
     "http://localhost:3001",
@@ -22,7 +23,7 @@ const router = Router();
 export default router;
 
 router.post("/signin", async (req, res) => {
-    const {success, data} = SignupSchema.safeParse(req.body);
+    const { success, data } = SignupSchema.safeParse(req.body);
     if (!success) {
         res.status(403).json({
             message: "Incorrect credentials"
@@ -47,13 +48,22 @@ router.post("/signin", async (req, res) => {
     }
 
     // TODO: Add password hashing
-    if (user.password !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
         res.status(403).json({
             message: "Incorrect creds"
         })
         return;
-
     }
+
+    // if (user.password !== password) {
+    //     res.status(403).json({
+    //         message: "Incorrect creds"
+    //     })
+    //     return;
+
+    // }
 
     const token = jwt.sign({
         userId: user.id
@@ -61,12 +71,12 @@ router.post("/signin", async (req, res) => {
 
     res.json({
         token
-    })    
+    })
 });
 
 
 router.post("/create-user", adminAuthMiddleware, async (req, res) => {
-    const {success, data} = CreateUserSchema.safeParse(req.body);
+    const { success, data } = CreateUserSchema.safeParse(req.body);
     if (!success) {
         res.status(403).json({
             message: "Incorrect credentials"
@@ -74,10 +84,14 @@ router.post("/create-user", adminAuthMiddleware, async (req, res) => {
         return;
     }
 
+    // Hashing the password here -
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(data.password, salt);
+
     const user = await prismaClient.user.create({
         data: {
             email: data.email,
-            password: data.password,
+            password: hashedPassword, // FIX: store hashed password
             phone: data.phone,
             role: "USER"
         }
@@ -95,7 +109,7 @@ router.post("/create-user", adminAuthMiddleware, async (req, res) => {
     console.log(aggregatedPublicKey);
 
     await prismaClient.user.update({
-        where: {id: user.id},
+        where: { id: user.id },
         data: {
             publicKey: aggregatedPublicKey.aggregatedPublicKey
         }
