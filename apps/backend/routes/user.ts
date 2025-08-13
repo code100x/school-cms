@@ -6,13 +6,14 @@ import { authMiddleware } from "../middleware";
 import { cli, MPC_SERVERS, MPC_THRESHOLD } from "./admin";
 import axios from "axios";
 import { NETWORK } from "common/solana";
+import bcrypt from "bcryptjs";
 
 const router = Router();
 
 export default router;
 
 router.post("/signin", async (req, res) => {
-    const {success, data} = SignupSchema.safeParse(req.body);
+    const { success, data } = SignupSchema.safeParse(req.body);
     if (!success) {
         res.status(403).json({
             message: "Incorrect credentials"
@@ -37,13 +38,22 @@ router.post("/signin", async (req, res) => {
     }
 
     // TODO: Add password hashing
-    if (user.password !== password) {
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
         res.status(403).json({
             message: "Incorrect creds"
         })
         return;
-
     }
+
+    // if (user.password !== password) {
+    //     res.status(403).json({
+    //         message: "Incorrect creds"
+    //     })
+    //     return;
+
+    // }
 
     const token = jwt.sign({
         userId: user.id
@@ -51,7 +61,7 @@ router.post("/signin", async (req, res) => {
 
     res.json({
         token
-    })    
+    })
 });
 
 router.get("/calendar/:courseId", authMiddleware, async (req, res) => {
@@ -91,7 +101,7 @@ router.get("/calendar/:courseId", authMiddleware, async (req, res) => {
 
 })
 
-router.get("/courses", authMiddleware, async(req, res) => {
+router.get("/courses", authMiddleware, async (req, res) => {
     const courses = await prismaClient.course.findMany({
         where: {
             purchases: {
@@ -113,7 +123,7 @@ router.get("/courses", authMiddleware, async(req, res) => {
 
 
 router.post("/send", authMiddleware, async (req, res) => {
-    const {success, data} = SendSchema.safeParse(req.body);
+    const { success, data } = SendSchema.safeParse(req.body);
     const blockhash = await cli.recentBlockHash();
     if (!success) {
         res.status(403).json({
@@ -123,7 +133,7 @@ router.post("/send", authMiddleware, async (req, res) => {
     }
 
     const user = await prismaClient.user.findFirst({
-        where: {id: req.userId}
+        where: { id: req.userId }
     });
 
     if (!user) {
@@ -135,7 +145,7 @@ router.post("/send", authMiddleware, async (req, res) => {
 
     const step1Responses = await Promise.all(MPC_SERVERS.map(async (server) => {
         try {
-        const response = await axios.post(`${server}/send/step-1`, {
+            const response = await axios.post(`${server}/send/step-1`, {
                 to: data.to,
                 amount: data.amount,
                 userId: req.userId,
@@ -181,9 +191,9 @@ router.post("/send", authMiddleware, async (req, res) => {
         network: NETWORK,
         memo: undefined,
         recentBlockhash: blockhash
-      };
-      
-      const signature = await cli.aggregateSignaturesAndBroadcast(
+    };
+
+    const signature = await cli.aggregateSignaturesAndBroadcast(
         JSON.stringify(partialSignatures),
         JSON.stringify(transactionDetails),
         JSON.stringify({
@@ -191,9 +201,9 @@ router.post("/send", authMiddleware, async (req, res) => {
             participantKeys: step2Responses.map((r) => r.publicKey),
             threshold: MPC_THRESHOLD
         })
-      );
+    );
 
-      res.json({
+    res.json({
         signature
-      })   
+    })
 })
